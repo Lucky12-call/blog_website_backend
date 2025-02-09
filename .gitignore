@@ -1,0 +1,31 @@
+# Dependency directories
+/node_modules
+
+# Runtime data
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+*.pid
+*.seed
+*.log
+
+# Environment files
+.env
+
+# Production build directory
+/build
+
+# macOS
+.DS_Store
+
+# Editor files
+.vscode/
+*.sublime-project
+*.sublime-workspace
+
+# IDE files
+*.idea/
+
+# OS generated files
+ehthumbs.db
+Thumbs.db
