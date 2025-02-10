@@ -1,16 +1,19 @@
 import cloudinary from "cloudinary";
 import { catchAsyncErrors } from "../middleware/catchAsyncError.js";
-import ErrorHandler from "../middleware/error.js";
 import { Blog } from "../models/blogSchema.js";
 
-export const blogPost = catchAsyncErrors(async (req, res, next) => {
+export const blogPost = catchAsyncErrors(async (req, res) => {
   if (!req.files || Object.keys(req.files).length === 0) {
-    return next(new ErrorHandler("Main blog image is Mandatory...", 400));
+    return res
+      .status(400)
+      .json({ success: false, message: "Main blog image is Mandatory..." });
   }
 
   const { mainImage, paraOneImage, paraTwoImage } = req.files;
   if (!mainImage) {
-    return next(new ErrorHandler("Main blog image is Mandatory", 400));
+    return res
+      .status(400)
+      .json({ success: false, message: "Main blog image is Mandatory" });
   }
 
   const allowedFormats = ["image/png", "image/jpg", "image/jpeg", "image/webp"];
@@ -19,12 +22,10 @@ export const blogPost = catchAsyncErrors(async (req, res, next) => {
     (paraOneImage && !allowedFormats.includes(paraOneImage.mimetype)) ||
     (paraTwoImage && !allowedFormats.includes(paraTwoImage.mimetype))
   ) {
-    return next(
-      new ErrorHandler(
-        "Invalid file type only png, jpeg and webp formate allowed!",
-        400
-      )
-    );
+    return res.status(400).json({
+      success: false,
+      message: "Invalid file type only png, jpeg and webp formate allowed!",
+    });
   }
 
   const {
@@ -43,9 +44,10 @@ export const blogPost = catchAsyncErrors(async (req, res, next) => {
   const authorAvatar = req.user.avatar.url;
 
   if (!title || !category || !intro) {
-    return next(
-      new ErrorHandler("Title, Intro and Category are required fields!", 400)
-    );
+    return res.status(400).json({
+      success: false,
+      message: "Title, Intro and Category are required fields!",
+    });
   }
 
   const uploadPromises = [
@@ -68,12 +70,10 @@ export const blogPost = catchAsyncErrors(async (req, res, next) => {
     (paraOneImage && (!paraOneImage || paraOneImageRes.error)) ||
     (paraTwoImage && (!paraTwoImage || paraTwoImageRes.error))
   ) {
-    return next(
-      new ErrorHandler(
-        "Error occurred white uploading one or more images!",
-        500
-      )
-    );
+    return res.status(400).json({
+      success: false,
+      message: "Error occurred white uploading one or more images!",
+    });
   }
 
   const blogData = {
@@ -117,12 +117,15 @@ export const blogPost = catchAsyncErrors(async (req, res, next) => {
 });
 
 //delete blogs
-export const deleteBlog = catchAsyncErrors(async (req, res, next) => {
+export const deleteBlog = catchAsyncErrors(async (req, res) => {
   const { id } = req.params;
   const blog = await Blog.findById(id);
 
   if (!blog) {
-    return next(new ErrorHandler("Blog not found!", 400));
+    return res.status(400).json({
+      success: false,
+      message: "Blog not found!",
+    });
   }
 
   await blog.deleteOne();
@@ -143,12 +146,15 @@ export const getAllBlog = catchAsyncErrors(async (_, res) => {
 });
 
 //get a particular blog
-export const getSingleBlog = catchAsyncErrors(async (req, res, next) => {
+export const getSingleBlog = catchAsyncErrors(async (req, res) => {
   const { id } = req.params;
   const singleBlog = await Blog.findById(id);
 
   if (!singleBlog) {
-    return next(new ErrorHandler("Blog not found!", 400));
+    return res.status(400).json({
+      success: false,
+      message: "Blog not found!",
+    });
   }
 
   res.status(200).json({
@@ -169,12 +175,15 @@ export const getMyBlogs = catchAsyncErrors(async (req, res) => {
 });
 
 //update blog
-export const updateBlog = catchAsyncErrors(async (req, res, next) => {
+export const updateBlog = catchAsyncErrors(async (req, res) => {
   const { id } = req.params;
   let blog = await Blog.findById(id);
 
   if (!blog) {
-    return next(new ErrorHandler("Blog not found!", 400));
+    return res.status(400).json({
+      success: false,
+      message: "Blog not found!",
+    });
   }
 
   const newBlogData = {
@@ -202,12 +211,10 @@ export const updateBlog = catchAsyncErrors(async (req, res, next) => {
       (paraOneImage && !allowedFormats.includes(paraOneImage.mimetype)) ||
       (paraTwoImage && !allowedFormats.includes(paraTwoImage.mimetype))
     ) {
-      return next(
-        new ErrorHandler(
-          "Invalid file type only png, jpeg and webp formate allowed!",
-          400
-        )
-      );
+      return res.status(400).json({
+        success: false,
+        message: "Invalid file type only png, jpeg and webp formate allowed!",
+      });
     }
     if (req.files && mainImage) {
       const blogMainImageId = blog.mainImage.public_id;

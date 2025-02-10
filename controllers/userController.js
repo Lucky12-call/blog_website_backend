@@ -1,25 +1,25 @@
-import ErrorHandler from "../middleware/error.js";
 import { User } from "../models/userSchema.js";
 import { catchAsyncErrors } from "../middleware/catchAsyncError.js";
 import { sendToken } from "../utils/jwtToken.js";
 import cloudinary from "cloudinary";
 
 // register
-export const register = catchAsyncErrors(async (req, res, next) => {
+export const register = catchAsyncErrors(async (req, res) => {
   if (!req.files || Object.keys(req.files).length === 0) {
-    return next(new ErrorHandler("User avatar required!", 400));
+    return res
+      .status(400)
+      .json({ success: false, message: "User avatar required!" });
   }
 
   const { avatar } = req.files;
 
   const allowedFormats = ["image/png", "image/jpg", "image/jpeg", "image/webp"];
   if (!allowedFormats.includes(avatar.mimetype)) {
-    return next(
-      new ErrorHandler(
+    return res.status(400).json({
+      success: false,
+      message:
         "Invalid file type. Please provide your avatar in png, jpg, webp formate!",
-        400
-      )
-    );
+    });
   }
 
   const { name, email, password, role, education, phone } = req.body;
@@ -33,12 +33,18 @@ export const register = catchAsyncErrors(async (req, res, next) => {
     !phone ||
     !avatar
   ) {
-    return next(new ErrorHandler("Please fill full details", 400));
+    return res.status(400).json({
+      success: false,
+      message: "Please fill full details",
+    });
   }
 
   let user = await User.findOne({ email });
   if (user) {
-    return next(new ErrorHandler("User already exists", 400));
+    return res.status(400).json({
+      success: false,
+      message: "User already exists",
+    });
   }
 
   const cloudinaryResponse = await cloudinary.uploader.upload(
@@ -71,23 +77,33 @@ export const register = catchAsyncErrors(async (req, res, next) => {
 export const logIn = catchAsyncErrors(async (req, res, next) => {
   const { email, password, role } = req.body;
   if (!email || !password || !role) {
-    return next(new ErrorHandler("Please fill full form!", 400));
+    return res.status(400).json({
+      success: false,
+      message: "Please fill full form!",
+    });
   }
 
   const user = await User.findOne({ email }).select("+password");
   if (!user) {
-    return next(new ErrorHandler("Invalid email and password!", 400));
+    return res.status(400).json({
+      success: false,
+      message: "Invalid email and password!",
+    });
   }
 
   const isPasswordMatched = await user.comparePassword(password);
   if (!isPasswordMatched) {
-    return next(new ErrorHandler("Invalid email and password!", 400));
+    return res.status(400).json({
+      success: false,
+      message: "Invalid email and password!",
+    });
   }
 
   if (user.role !== role) {
-    return next(
-      new ErrorHandler(`User with provided role (${role}) not found`, 400)
-    );
+    return res.status(400).json({
+      success: false,
+      message: `User with provided role (${role}) not found`,
+    });
   }
 
   sendToken(user, 200, "User logged successfully!", res);
@@ -100,8 +116,6 @@ export const logOut = catchAsyncErrors(async (_, res) => {
     .cookie("token", "", {
       expires: new Date(Date.now()),
       httpOnly: true,
-      sameSite: "None",
-      secure: true,
     })
     .json({
       success: true,

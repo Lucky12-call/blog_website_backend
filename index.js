@@ -4,11 +4,9 @@ import dotenv from "dotenv";
 import cors from "cors";
 import cookieParser from "cookie-parser";
 import { dbConnection } from "./database/dbConnection.js";
-import { errorMiddleware } from "./middleware/error.js";
 import userRouter from "./routes/userRouter.js";
 import blogRouter from "./routes/blogRouter.js";
 import fileUpload from "express-fileupload";
-import madge from 'madge';
 
 const app = express();
 dotenv.config({ path: "./config/config.env" });
@@ -42,14 +40,11 @@ cloudinary.v2.config({
 
 // Routers
 app.get("/", (_, res) => res.send("Blog API is running"));
-app.use("/api/v1/user", userRouter);
-app.use("/api/v1/blog", blogRouter);
+app.use("/api/user", userRouter);
+app.use("/api/blog", blogRouter);
 
 // Database connection
 dbConnection();
-
-// Error middleware
-app.use(errorMiddleware);
 
 // Start the server
 app.listen(process.env.PORT, () =>
